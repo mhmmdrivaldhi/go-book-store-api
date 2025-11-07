@@ -15,6 +15,7 @@ import (
 
 type Server struct {
 	bookUsecase usecase.BookUsecase
+	userUsecase usecase.UserUsecase
 	engine *gin.Engine
 	host string
 }
@@ -23,6 +24,7 @@ func (s *Server) InitRoute() {
 	v1 := s.engine.Group("/v1")
 
 	controller.NewBookController(s.bookUsecase, v1).Route()
+	controller.NewUserController(s.userUsecase, v1).Route()
 }
 
 func (s *Server) Run() {
@@ -46,16 +48,23 @@ func NewServer() *Server {
 		fmt.Printf("successfully connect to database %s\n", cfg.Database)
 	}
 
-	db.AutoMigrate(&model.Book{})
+	db.AutoMigrate(
+		&model.Book{}, 
+		&model.User{},
+	)
 
 	bookRepository := repository.NewBookRepository(db)
 	bookUsecase := usecase.NewBookUsecase(bookRepository)
+
+	userRepository := repository.NewUserRepository(db)
+	userUsecase := usecase.NewUserUsecase(userRepository)
 
 
 	engine := gin.Default()
 	host := fmt.Sprintf(":%s", cfg.AppPort)
 	return &Server{
 		bookUsecase: bookUsecase,
+		userUsecase: userUsecase,
 		engine: engine,
 		host: host,
 	}

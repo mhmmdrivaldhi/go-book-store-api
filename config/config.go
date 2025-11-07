@@ -22,9 +22,16 @@ type AppConfig struct {
 	AppPort        string
 }
 
+type ApiConfig struct {
+	JwtSignaturKey 		string
+	JwtSigningMethod 	string
+	AccessTokenLifeTime int
+}
+
 type Config struct {
 	DBConfig
 	AppConfig
+	ApiConfig
 }
 
 func (cfg *Config) loadConfig() error {
@@ -47,7 +54,13 @@ func (cfg *Config) loadConfig() error {
 		Driver:   os.Getenv("DB_DRIVER"),
 	}
 
-	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" {
+	cfg.ApiConfig = ApiConfig{
+		JwtSignaturKey:     os.Getenv("JWT_SIGNATURE_KEY"),
+		JwtSigningMethod:   os.Getenv("JWT_SIGNING_METHOD"),
+		AccessTokenLifeTime: 24,
+	}
+
+	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" || cfg.JwtSignaturKey == "" {
 		fmt.Println("config .env is required")
 	}
 

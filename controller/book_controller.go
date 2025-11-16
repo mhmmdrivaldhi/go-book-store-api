@@ -5,24 +5,16 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mhmmmdrivaldhi/go-book-api/middleware"
 	"github.com/mhmmmdrivaldhi/go-book-api/model/dto"
 	"github.com/mhmmmdrivaldhi/go-book-api/usecase"
 )
 
 type bookController struct {
 	bookUsecase usecase.BookUsecase
-	rg *gin.RouterGroup
 }
 
-func (bc *bookController) Route() {
-	bc.rg.POST("/book", bc.createBook)
-	bc.rg.GET("/book", bc.getAllBook)
-	bc.rg.GET("/book/:id", bc.getBookById)
-	bc.rg.PUT("/book/:id", bc.updateBook)
-	bc.rg.DELETE("/book/:id", bc.deleteBook)
-}
-
-func (bc *bookController) createBook(ctx *gin.Context) {
+func (bc *bookController) CreateBook(ctx *gin.Context) {
 	var req dto.CreateBookRequest
 
 	err := ctx.ShouldBindJSON(&req)
@@ -43,7 +35,7 @@ func (bc *bookController) createBook(ctx *gin.Context) {
 	})
 }
 
-func (bc *bookController) getAllBook(ctx *gin.Context) {
+func (bc *bookController) GetAllBook(ctx *gin.Context) {
 	books, err := bc.bookUsecase.GetAll()
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
@@ -56,7 +48,7 @@ func (bc *bookController) getAllBook(ctx *gin.Context) {
 	})
 }
 
-func (bc *bookController) getBookById(ctx *gin.Context) {
+func (bc *bookController) GetBookById(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
@@ -75,7 +67,7 @@ func (bc *bookController) getBookById(ctx *gin.Context) {
 	})
 }
 
-func (bc *bookController) updateBook(ctx *gin.Context) {
+func (bc *bookController) UpdateBook(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
@@ -102,7 +94,7 @@ func (bc *bookController) updateBook(ctx *gin.Context) {
 	})	
 }
 
-func (bc *bookController) deleteBook(ctx *gin.Context) {
+func (bc *bookController) DeleteBook(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
@@ -120,9 +112,20 @@ func (bc *bookController) deleteBook(ctx *gin.Context) {
 	})
 }
 
-func NewBookController(bookUsecase usecase.BookUsecase, rg *gin.RouterGroup) *bookController {
-	return &bookController{
-		bookUsecase: bookUsecase,
-		rg: rg,
-	}
+func NewBookController(bu usecase.BookUsecase, rg *gin.RouterGroup) *bookController{
+	controller := &bookController{bookUsecase: bu}
+
+	// public routes
+	rg.GET("/book", controller.GetAllBook)
+	rg.GET("/book/:id", controller.GetBookById)
+
+	// allowed roles routes
+	protected := rg.Group("")
+	protected.Use(middleware.RoleMiddleware("admin", "seller"))
+
+	protected.POST("/book", controller.CreateBook)
+	protected.PUT("/book/:id", controller.UpdateBook)
+	protected.DELETE("/book/:id", controller.DeleteBook)
+
+	return controller
 }

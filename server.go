@@ -6,8 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mhmmmdrivaldhi/go-book-api/config"
 	"github.com/mhmmmdrivaldhi/go-book-api/controller"
+	"github.com/mhmmmdrivaldhi/go-book-api/middleware"
 	"github.com/mhmmmdrivaldhi/go-book-api/model"
 	"github.com/mhmmmdrivaldhi/go-book-api/repository"
+	"github.com/mhmmmdrivaldhi/go-book-api/service"
 	"github.com/mhmmmdrivaldhi/go-book-api/usecase"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -16,15 +18,27 @@ import (
 type Server struct {
 	bookUsecase usecase.BookUsecase
 	userUsecase usecase.UserUsecase
+	authUsecase usecase.AuthUsecase
+	jwtService  service.JwtService
 	engine *gin.Engine
 	host string
 }
 
 func (s *Server) InitRoute() {
-	v1 := s.engine.Group("/v1")
+	auth := s.engine.Group("/api/auth")
+	controller.NewAuthController(s.authUsecase, auth)
 
-	controller.NewBookController(s.bookUsecase, v1).Route()
+	v1 := s.engine.Group("/api/v1")
+
+	authMiddleware := middleware.NewAuthMiddleware(s.jwtService)
+
+	// public routes
 	controller.NewUserController(s.userUsecase, v1).Route()
+
+	authGroup := v1.Group("")
+	authGroup.Use(authMiddleware.RequireToken())
+
+	controller.NewBookController(s.bookUsecase, authGroup)
 }
 
 func (s *Server) Run() {
@@ -53,11 +67,15 @@ func NewServer() *Server {
 		&model.User{},
 	)
 
+	jwtService := service.NewJwtService(cfg.ApiConfig)
+
 	bookRepository := repository.NewBookRepository(db)
 	bookUsecase := usecase.NewBookUsecase(bookRepository)
 
 	userRepository := repository.NewUserRepository(db)
 	userUsecase := usecase.NewUserUsecase(userRepository)
+
+	authUsecase := usecase.NewAuthUsecase(userRepository, jwtService)
 
 
 	engine := gin.Default()
@@ -65,6 +83,8 @@ func NewServer() *Server {
 	return &Server{
 		bookUsecase: bookUsecase,
 		userUsecase: userUsecase,
+		authUsecase: authUsecase,
+		jwtService: jwtService,
 		engine: engine,
 		host: host,
 	}

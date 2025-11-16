@@ -23,7 +23,7 @@ type AppConfig struct {
 }
 
 type ApiConfig struct {
-	JwtSignaturKey 		string
+	JwtSignatureKey 		string
 	JwtSigningMethod 	string
 	AccessTokenLifeTime int
 }
@@ -55,12 +55,12 @@ func (cfg *Config) loadConfig() error {
 	}
 
 	cfg.ApiConfig = ApiConfig{
-		JwtSignaturKey:     os.Getenv("JWT_SIGNATURE_KEY"),
+		JwtSignatureKey:     os.Getenv("JWT_SIGNATURE_KEY"),
 		JwtSigningMethod:   os.Getenv("JWT_SIGNING_METHOD"),
 		AccessTokenLifeTime: 24,
 	}
 
-	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" || cfg.JwtSignaturKey == "" {
+	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" || cfg.JwtSignatureKey == "" {
 		fmt.Println("config .env is required")
 	}
 

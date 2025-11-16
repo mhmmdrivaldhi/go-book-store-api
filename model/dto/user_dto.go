@@ -25,13 +25,3 @@ type UpdateUserRequest struct {
 	Password *string `json:"password" validate:"omitempty,min=6"`
 	Role     *string `json:"role" validate:"omitempty"`
 }
-
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
-type LoginResponse struct {
-	Token string       `json:"token"`
-	User  UserResponse `json:"user"`
-}

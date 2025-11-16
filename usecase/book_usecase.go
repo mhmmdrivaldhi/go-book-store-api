@@ -9,18 +9,18 @@ import (
 )
 
 type BookUsecase interface {
-	Create(req dto.CreateBookRequest) (*model.Book, error)
+	Create(req dto.CreateBookRequest,) (*model.Book, error)
 	GetAll() ([]dto.BookResponse, error)
 	GetById(id int) (*dto.BookResponse, error)
 	Update(id int, reqUpdate dto.UpdateBookRequest) (*model.Book, error)
-	Delete(id int) error
+	Delete(id int,) error
 }
 
 type bookUsecase struct {
 	bookRepo repository.BookRepository
 }
 
-func (bu *bookUsecase) Create(req dto.CreateBookRequest) (*model.Book, error) {
+func (bu *bookUsecase) Create(req dto.CreateBookRequest,) (*model.Book, error) {
 	books := &model.Book{
 		Title:       req.Title,
 		Description: req.Description,
@@ -115,7 +115,7 @@ func (bu *bookUsecase) Update(id int, reqUpdate dto.UpdateBookRequest) (*model.B
 	return updateBook, nil
 }
 
-func (bu *bookUsecase) Delete(id int) error {
+func (bu *bookUsecase) Delete(id int,) error {
 	_, err := bu.bookRepo.FindById(id)
 	if err != nil {
 		return errors.New("book not found")

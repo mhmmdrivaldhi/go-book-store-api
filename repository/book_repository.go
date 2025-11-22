@@ -24,13 +24,20 @@ func (bookRepo *bookRepository) CreateBook(book *model.Book) (*model.Book, error
 	if err != nil {
 		return nil, err
 	}
-	return book, nil
+
+	var res model.Book
+	err = bookRepo.db.Preload("Category").First(&res, book.Id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }
 
 func (bookRepo *bookRepository) FindAll() ([]model.Book, error) {
 	var books []model.Book
 
-	err := bookRepo.db.Find(&books).Error
+	err := bookRepo.db.Preload("Category").Find(&books).Error
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +52,7 @@ func (bookRepo *bookRepository) FindAll() ([]model.Book, error) {
 func (bookRepo *bookRepository) FindById(id int) (*model.Book, error) {
 	var book model.Book
 
-	err := bookRepo.db.First(&book, id).Error
+	err := bookRepo.db.Preload("Category").First(&book, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("book not found")
 	} else if err != nil {
@@ -69,6 +76,12 @@ func (bookRepo *bookRepository) UpdateBook(id int, updateBook *model.Book) (*mod
 	if err != nil {
 		return nil, err
 	}
+
+	err = bookRepo.db.Preload("Category").First(&book, id).Error
+	if err != nil {
+		return nil, err
+	}
+
 
 	return &book, nil
 }

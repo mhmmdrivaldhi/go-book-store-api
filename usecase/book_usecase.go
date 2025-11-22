@@ -9,7 +9,7 @@ import (
 )
 
 type BookUsecase interface {
-	Create(req dto.CreateBookRequest,) (*model.Book, error)
+	Create(req dto.CreateBookRequest) (*model.Book, error)
 	GetAll() ([]dto.BookResponse, error)
 	GetById(id int) (*dto.BookResponse, error)
 	Update(id int, reqUpdate dto.UpdateBookRequest) (*model.Book, error)
@@ -27,6 +27,7 @@ func (bu *bookUsecase) Create(req dto.CreateBookRequest,) (*model.Book, error) {
 		Author:      req.Author,
 		Price:       req.Price,
 		Rating:      req.Rating,
+		CategoryID:  req.CategoryID,
 	}
 
 	create, err := bu.bookRepo.CreateBook(books)
@@ -46,7 +47,16 @@ func (bu *bookUsecase) GetAll() ([]dto.BookResponse, error) {
 	}
 
 	for _, book := range books {
+		var categoryResponse *dto.CategoryResponse
+        if book.Category.ID != 0 { // aman, karena 'book' tidak nil
+            categoryResponse = &dto.CategoryResponse{
+                ID:   book.Category.ID,
+                Name: book.Category.Name,
+            }
+        }
+
 		bookResponse := dto.BookResponse{
+			Category: categoryResponse,
 			Id: book.Id,
 			Title: book.Title,
 			Description: book.Description,
@@ -67,7 +77,16 @@ func (bu *bookUsecase) GetById(id int) (*dto.BookResponse, error) {
 		return nil, err
 	}
 
-	response := &dto.BookResponse{
+	var categoryResponse *dto.CategoryResponse
+	if book.Category.ID != 0 {
+		categoryResponse = &dto.CategoryResponse{
+			ID: book.Category.ID,
+			Name: book.Category.Name,
+		}
+	}
+
+	bookResponse := &dto.BookResponse{
+		Category: categoryResponse,
 		Id: book.Id,
 		Title: book.Title,
 		Description: book.Description,
@@ -77,7 +96,7 @@ func (bu *bookUsecase) GetById(id int) (*dto.BookResponse, error) {
 		CreatedAt: book.CreatedAt,
 		UpdatedAt: book.UpdatedAt,
 	}
-	return response, nil
+	return bookResponse, nil
 }
 
 func (bu *bookUsecase) Update(id int, reqUpdate dto.UpdateBookRequest) (*model.Book, error) {

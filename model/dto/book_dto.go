@@ -8,6 +8,7 @@ type CreateBookRequest struct {
 	Author      string `json:"author" binding:"required"`
 	Price       int    `json:"price" binding:"required"`
 	Rating      int    `json:"rating" binding:"required"`
+	CategoryID  int	   `json:"category_id" binding:"required"`
 }
 
 type UpdateBookRequest struct {
@@ -19,6 +20,7 @@ type UpdateBookRequest struct {
 }
 
 type BookResponse struct {
+	Category    *CategoryResponse `json:"category"`
 	Id          int    `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`

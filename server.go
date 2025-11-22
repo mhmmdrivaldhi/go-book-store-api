@@ -18,6 +18,7 @@ import (
 type Server struct {
 	bookUsecase usecase.BookUsecase
 	userUsecase usecase.UserUsecase
+	categoryUsecase usecase.CategoryUsecase
 	authUsecase usecase.AuthUsecase
 	jwtService  service.JwtService
 	engine *gin.Engine
@@ -35,10 +36,12 @@ func (s *Server) InitRoute() {
 	// public routes
 	controller.NewUserController(s.userUsecase, v1).Route()
 
+	// routes with authentication & authorization
 	authGroup := v1.Group("")
 	authGroup.Use(authMiddleware.RequireToken())
 
 	controller.NewBookController(s.bookUsecase, authGroup)
+	controller.NewCategoryController(s.categoryUsecase, authGroup)
 }
 
 func (s *Server) Run() {
@@ -63,14 +66,18 @@ func NewServer() *Server {
 	}
 
 	db.AutoMigrate(
-		&model.Book{}, 
 		&model.User{},
+		&model.Book{},
+		&model.Category{},
 	)
 
 	jwtService := service.NewJwtService(cfg.ApiConfig)
 
 	bookRepository := repository.NewBookRepository(db)
 	bookUsecase := usecase.NewBookUsecase(bookRepository)
+
+	categoryRepository := repository.NewCategoryRepository(db)
+	categoryUsecase := usecase.NewCategoryUsecase(categoryRepository)
 
 	userRepository := repository.NewUserRepository(db)
 	userUsecase := usecase.NewUserUsecase(userRepository)
@@ -82,6 +89,7 @@ func NewServer() *Server {
 	host := fmt.Sprintf(":%s", cfg.AppPort)
 	return &Server{
 		bookUsecase: bookUsecase,
+		categoryUsecase: categoryUsecase,
 		userUsecase: userUsecase,
 		authUsecase: authUsecase,
 		jwtService: jwtService,

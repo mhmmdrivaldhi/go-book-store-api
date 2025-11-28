@@ -10,17 +10,16 @@ import (
 )
 
 type CartRepository interface {
-	GetCart(userId int) (*model.Cart, error)
-	SetCart(userId int, cart *model.Cart) (*model.Cart, error)
-	ClearCart(userId int) error
+	GetCart(ctx context.Context, userId int) (*model.Cart, error)
+	SetCart(ctx context.Context, userId int, cart *model.Cart) (*model.Cart, error)
+	ClearCart(ctx context.Context, userId int) error
 }
 
 type cartRepository struct {
 	redis *redis.Client
 }
 
-func (cr *cartRepository) GetCart(userId int) (*model.Cart, error) {
-	ctx := context.Background()
+func (cr *cartRepository) GetCart(ctx context.Context, userId int) (*model.Cart, error) {
 	key := fmt.Sprintf("cart: %d", userId)
 
 	data, err := cr.redis.Get(ctx, key).Result()
@@ -28,19 +27,23 @@ func (cr *cartRepository) GetCart(userId int) (*model.Cart, error) {
 		return &model.Cart{
 			UserId: userId,
 			Items: []model.Item{},
+			TotalQty: 0,
+			TotalPrice: 0,
 		}, nil
 	} else if err != nil {
 		return nil, err
 	}
 
 	var cart model.Cart
-	json.Unmarshal([]byte(data), &cart)
+	err = json.Unmarshal([]byte(data), &cart)
+	if err != nil {
+		return nil, err
+	}
 
 	return &cart, nil
 }
 
-func (cr *cartRepository) SetCart(userId int, cart *model.Cart) (*model.Cart, error) {
-	ctx := context.Background()
+func (cr *cartRepository) SetCart(ctx context.Context, userId int, cart *model.Cart) (*model.Cart, error) {
 	key := fmt.Sprintf("cart: %d", userId)
 
 	data, err := json.Marshal(cart)
@@ -56,8 +59,7 @@ func (cr *cartRepository) SetCart(userId int, cart *model.Cart) (*model.Cart, er
 	return cart, err
 }
 
-func (cr *cartRepository) ClearCart(userId int) error {
-	ctx := context.Background()
+func (cr *cartRepository) ClearCart(ctx context.Context, userId int) error {
 	key := fmt.Sprintf("cart: %d", userId)
 
 	err := cr.redis.Del(ctx, key).Err()

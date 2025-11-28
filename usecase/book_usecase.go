@@ -48,7 +48,7 @@ func (bu *bookUsecase) GetAll() ([]dto.BookResponse, error) {
 
 	for _, book := range books {
 		var categoryResponse *dto.CategoryResponse
-        if book.Category.ID != 0 { // aman, karena 'book' tidak nil
+        if book.Category.ID != 0 { 
             categoryResponse = &dto.CategoryResponse{
                 ID:   book.Category.ID,
                 Name: book.Category.Name,

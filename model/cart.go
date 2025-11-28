@@ -2,7 +2,6 @@ package model
 
 type Item struct {
 	BookId int `json:"book_id"`
-	Title string `json:"title"`
 	Price  int `json:"price"`
 	Qty	   int `json:"qty"`
 }

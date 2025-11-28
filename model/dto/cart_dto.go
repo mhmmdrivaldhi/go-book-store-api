@@ -1,12 +1,12 @@
 package dto
 
-import "github.com/mhmmmdrivaldhi/go-book-api/model"
-
-type RequestUpdateCartByMode struct {
+type RequestUpdateQtyFromItem struct {
+	BookId *int   `json:"book_id" binding:"omitempty"`
 	Qty  *int   `json:"qty" binding:"omitempty"`
-	Mode string `json:"mode" binding:"omitempty"`
 }
 
-type RequestReplaceAllCart struct {
-	Items []model.Item `json:"items" binding:"omitempty"`
+type RequestUpdateItemFromCart struct {
+	BookId *int   `json:"book_id" binding:"omitempty"`
+	Qty *int   `json:"qty" binding:"omitempty"`
+	Price *int `json:"price" binding:"omitempty"`
 }

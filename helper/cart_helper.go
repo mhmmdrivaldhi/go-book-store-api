@@ -10,3 +10,12 @@ func CalculateTotalPrice(cart *model.Cart) int {
 
 	return price
 }
+
+func CalculateTotalQty(cart *model.Cart) int {
+	qty := 0
+	for _, item := range cart.Items {
+		qty += item.Qty
+	}
+
+	return qty
+}

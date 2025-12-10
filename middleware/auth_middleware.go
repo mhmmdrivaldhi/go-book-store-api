@@ -30,6 +30,12 @@ func (am *authMiddleware) RequireToken() gin.HandlerFunc {
 			return 
 		}
 
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			log.Println("Authorization header format is invalid")
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "authorization header must use: Bearer <token>"})
+			return
+		}
+
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenStr == "" {
 			log.Println("Bearer token is missing")
@@ -39,7 +45,7 @@ func (am *authMiddleware) RequireToken() gin.HandlerFunc {
 
 		claims, err := am.jwtService.ValidateToken(tokenStr)
 		if err != nil {
-			log.Printf("Middleware: Token validation/parsing failed: %v\n", err)
+			log.Printf("Token validation failed: %v\n", err)
 
 			if errors.Is(err, errors.New("token is expire")) {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "Token has expired"})

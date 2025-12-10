@@ -16,10 +16,11 @@ import (
 )
 
 type Server struct {
-	bookUsecase usecase.BookUsecase
-	userUsecase usecase.UserUsecase
-	categoryUsecase usecase.CategoryUsecase
 	authUsecase usecase.AuthUsecase
+	userUsecase usecase.UserUsecase
+	bookUsecase usecase.BookUsecase
+	categoryUsecase usecase.CategoryUsecase
+	cartUsecase usecase.CartUsecase
 	jwtService  service.JwtService
 	engine *gin.Engine
 	host string
@@ -42,6 +43,7 @@ func (s *Server) InitRoute() {
 
 	controller.NewBookController(s.bookUsecase, authGroup)
 	controller.NewCategoryController(s.categoryUsecase, authGroup)
+	controller.NewCartController(s.cartUsecase, authGroup)
 }
 
 func (s *Server) Run() {
@@ -84,15 +86,22 @@ func NewServer() *Server {
 
 	authUsecase := usecase.NewAuthUsecase(userRepository, jwtService)
 
+	// Initialize Redis Client
+	redisClient := config.NewRedisClient(cfg)
+
+	cartRepository := repository.NewCartRepository(redisClient)
+	cartUsecase := usecase.NewCartUsecase(cartRepository, bookUsecase)
+
 
 	engine := gin.Default()
 	host := fmt.Sprintf(":%s", cfg.AppPort)
 	return &Server{
-		bookUsecase: bookUsecase,
-		categoryUsecase: categoryUsecase,
-		userUsecase: userUsecase,
 		authUsecase: authUsecase,
 		jwtService: jwtService,
+		userUsecase: userUsecase,
+		bookUsecase: bookUsecase,
+		categoryUsecase: categoryUsecase,
+		cartUsecase: cartUsecase,
 		engine: engine,
 		host: host,
 	}

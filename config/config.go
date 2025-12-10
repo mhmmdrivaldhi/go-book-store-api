@@ -28,10 +28,18 @@ type ApiConfig struct {
 	AccessTokenLifeTime int
 }
 
+type RedisConfig struct {
+	RedisHost string
+	RedisPort string
+	RedisPassword string
+	RedisDB int
+}
+
 type Config struct {
 	DBConfig
 	AppConfig
 	ApiConfig
+	RedisConfig
 }
 
 func (cfg *Config) loadConfig() error {
@@ -60,7 +68,14 @@ func (cfg *Config) loadConfig() error {
 		AccessTokenLifeTime: 24,
 	}
 
-	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" || cfg.JwtSignatureKey == "" {
+	cfg.RedisConfig = RedisConfig{
+		RedisHost: os.Getenv("REDIS_HOST"),
+		RedisPort: os.Getenv("REDIS_PORT"),
+		RedisPassword: os.Getenv("REDIS_PASSWORD"),
+		
+	}
+
+	if cfg.Host == "" || cfg.Port == "" || cfg.Database == "" || cfg.Username == "" || cfg.Password == "" || cfg.AppPort == "" || cfg.JwtSignatureKey == "" || cfg.RedisHost == "" || cfg.RedisPort == "" {
 		fmt.Println("config .env is required")
 	}
 

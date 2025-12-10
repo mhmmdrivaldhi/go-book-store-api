@@ -20,7 +20,7 @@ type cartRepository struct {
 }
 
 func (cr *cartRepository) GetCart(ctx context.Context, userId int) (*model.Cart, error) {
-	key := fmt.Sprintf("cart: %d", userId)
+	key := fmt.Sprintf("cart:%d", userId)
 
 	data, err := cr.redis.Get(ctx, key).Result()
 	if err == redis.Nil {
@@ -30,8 +30,10 @@ func (cr *cartRepository) GetCart(ctx context.Context, userId int) (*model.Cart,
 			TotalQty: 0,
 			TotalPrice: 0,
 		}, nil
-	} else if err != nil {
-		return nil, err
+	}
+
+	if err != nil {
+		return nil , err
 	}
 
 	var cart model.Cart
@@ -44,14 +46,14 @@ func (cr *cartRepository) GetCart(ctx context.Context, userId int) (*model.Cart,
 }
 
 func (cr *cartRepository) SetCart(ctx context.Context, userId int, cart *model.Cart) (*model.Cart, error) {
-	key := fmt.Sprintf("cart: %d", userId)
+	key := fmt.Sprintf("cart:%d", userId)
 
-	data, err := json.Marshal(cart)
+	bytes, err := json.Marshal(cart)
 	if err != nil {
 		return nil, err
 	}
 
-	err = cr.redis.Set(ctx, key, data, 0).Err()
+	err = cr.redis.Set(ctx, key, bytes, 0).Err()
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +62,7 @@ func (cr *cartRepository) SetCart(ctx context.Context, userId int, cart *model.C
 }
 
 func (cr *cartRepository) ClearCart(ctx context.Context, userId int) error {
-	key := fmt.Sprintf("cart: %d", userId)
+	key := fmt.Sprintf("cart:%d", userId)
 
 	err := cr.redis.Del(ctx, key).Err()
 	if err != nil {

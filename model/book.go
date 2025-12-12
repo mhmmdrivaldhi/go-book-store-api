@@ -8,6 +8,7 @@ type Book struct {
 	Description string 		`json:"description" binding:"required"`
 	Author      string 		`json:"author" binding:"required"`
 	Price       int    		`json:"price" binding:"required"`
+	Stock       int    		`json:"stock" binding:"required"`
 	Rating      int			`json:"rating" binding:"required"`
 	CategoryID  int			`json:"category_id" gorm:"not null"`
 	Category    Category	`json:"category" gorm:"foreignKey:CategoryID"`

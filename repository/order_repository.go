@@ -16,7 +16,7 @@ type OrderRepository interface {
 }
 
 type orderRepository struct {
-	db gorm.DB
+	db *gorm.DB
 }
 
 func(or *orderRepository) CreateOrder(order *model.Order) (*model.Order, error) {
@@ -117,5 +117,5 @@ func (or *orderRepository) DeleteOrder(id int) error {
 }
 
 func NewOrderRepository(db *gorm.DB) *orderRepository {
-	return &orderRepository{db: *db}
+	return &orderRepository{db: db}
 }

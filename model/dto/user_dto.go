@@ -14,6 +14,9 @@ type UserResponse struct {
 	Name      string `json:"name"`
 	Email     string `json:"email"`
 	Password  string `json:"-"`
+	Address   string `json:"address"`
+	BankName  string `json:"bank_name"`
+	BankNumber int `json:"bank_number"`
 	Role      string `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

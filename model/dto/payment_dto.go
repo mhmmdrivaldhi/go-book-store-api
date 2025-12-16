@@ -1,16 +1,11 @@
 package dto
 
-import "time"
-
-type PaymentCallbackRequest struct {
-	OrderId           int    `json:"order_id"`
-	TransactionId     string `json:"transaction_id"`
-	TransactionStatus string `json:"transaction_status"`
-	Transaction_time  time.Time `json:"transaction_time"`
+type UpdatePaymentStatusRequest struct {
+	PaymentStatus string `json:"payment_status" binding:"required,oneof=Paid Unpaid"`
 }
 
-type UpdatedShippingStatusRequest struct {
-	OrderId int `json:"order_id"`
-	Status string `json:"status"`
+type UpdateOrderStatusRequest struct {
+	OrderStatus string `json:"order_status" binding:"required,oneof=Processing Shipping Delivered"`
 }
+
 

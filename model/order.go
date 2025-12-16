@@ -8,8 +8,9 @@ type Order struct {
 	User         User   `json:"user" gorm:"foreignKey:user_id"`
 	TotalAmount  int    `json:"total_amount"`
 	TotalQty     int    `json:"total_qty"`
-	PaymentStatus  string `json:"payment_status"`
 	OrderStatus       string `json:"order_status"`
+	PaymentStatus  string `json:"payment_status"`
+	ShippingStatus string `json:"shipping_status"`
 	ExpiredAt time.Time `json:"expired_at"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`

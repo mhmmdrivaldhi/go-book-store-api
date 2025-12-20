@@ -21,6 +21,7 @@ type Server struct {
 	bookUsecase usecase.BookUsecase
 	categoryUsecase usecase.CategoryUsecase
 	cartUsecase usecase.CartUsecase
+	orderUsecase usecase.OrderUsecase
 	jwtService  service.JwtService
 	engine *gin.Engine
 	host string
@@ -44,6 +45,7 @@ func (s *Server) InitRoute() {
 	controller.NewBookController(s.bookUsecase, authGroup)
 	controller.NewCategoryController(s.categoryUsecase, authGroup)
 	controller.NewCartController(s.cartUsecase, authGroup)
+	controller.NewOrderController(s.orderUsecase, s.cartUsecase, authGroup)
 }
 
 func (s *Server) Run() {
@@ -71,6 +73,8 @@ func NewServer() *Server {
 		&model.User{},
 		&model.Book{},
 		&model.Category{},
+		&model.Order{},
+		&model.OrderItem{},
 	)
 
 	jwtService := service.NewJwtService(cfg.ApiConfig)
@@ -92,6 +96,9 @@ func NewServer() *Server {
 	cartRepository := repository.NewCartRepository(redisClient)
 	cartUsecase := usecase.NewCartUsecase(cartRepository, bookUsecase)
 
+	orderRepository := repository.NewOrderRepository(db)
+	orderUsecase := usecase.NewOrderUsecase(orderRepository)
+
 
 	engine := gin.Default()
 	host := fmt.Sprintf(":%s", cfg.AppPort)
@@ -102,6 +109,7 @@ func NewServer() *Server {
 		bookUsecase: bookUsecase,
 		categoryUsecase: categoryUsecase,
 		cartUsecase: cartUsecase,
+		orderUsecase: orderUsecase,
 		engine: engine,
 		host: host,
 	}

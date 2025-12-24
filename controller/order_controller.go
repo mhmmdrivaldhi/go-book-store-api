@@ -67,7 +67,7 @@ func (oc *orderController) GetOrderById(ctx *gin.Context) {
 	})
 }
 
-func (oc *orderController) UpdatePaymentStatus(ctx *gin.Context) {
+func (oc *orderController) UpdateStatus(ctx *gin.Context) {
 	orderId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid order id"})
@@ -80,10 +80,24 @@ func (oc *orderController) UpdatePaymentStatus(ctx *gin.Context) {
 		return
 	}
 
-	update, err := oc.orderUsecase.UpdatePaymentStatus(orderId, request)
+	update, err := oc.orderUsecase.UpdatePaymentStatus(orderId, dto.UpdatePaymentStatusRequest{
+		PaymentStatus: request.PaymentStatus,
+	})
+
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
+	}
+
+	if request.PaymentStatus == "Paid" {
+		_, err := oc.orderUsecase.UpdateOrderStatus(orderId, dto.UpdateOrderStatusRequest{
+			OrderStatus: "Shipping",
+		})
+
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, dto.GeneralResponse{
@@ -111,11 +125,6 @@ func (oc *orderController) CancelOrder(ctx *gin.Context) {
 }
 
 func NewOrderController(orderUsecase usecase.OrderUsecase, cartUsecase usecase.CartUsecase, rg *gin.RouterGroup) *orderController {
-	return &orderController{
-		orderUsecase: orderUsecase,
-		cartUsecase: cartUsecase,
-	}
-
 	controller := &orderController{
 		orderUsecase: orderUsecase,
 		cartUsecase: cartUsecase,
@@ -123,9 +132,8 @@ func NewOrderController(orderUsecase usecase.OrderUsecase, cartUsecase usecase.C
 
 	rg.POST("/order", controller.OrderFromCart)
 	rg.GET("/order", controller.GetAllOrders)
-	rg.GET("/order", controller.GetOrderById)
-	rg.PUT("/order/:id/payment", controller.UpdatePaymentStatus)
-	// rg.PUT("order/:id/status", controller.UpdateOrderStatus)
+	rg.GET("/order/:id", controller.GetOrderById)
+	rg.PUT("/order/:id/status", controller.UpdateStatus)
 	rg.DELETE("/order/:id", controller.CancelOrder)
 
 	return controller

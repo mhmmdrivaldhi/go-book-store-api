@@ -8,6 +8,7 @@ import (
 	"github.com/mhmmmdrivaldhi/go-book-api/model"
 	"github.com/mhmmmdrivaldhi/go-book-api/model/dto"
 	"github.com/mhmmmdrivaldhi/go-book-api/repository"
+	"github.com/mhmmmdrivaldhi/go-book-api/service"
 )
 
 type OrderUsecase interface {
@@ -21,6 +22,7 @@ type OrderUsecase interface {
 
 type orderUsecase struct {
 	orderRepo repository.OrderRepository
+	ttlService service.OrderTTLService
 }
 
 const (
@@ -31,6 +33,7 @@ const (
 	OrderShipped = "Shipping"
 	OrderDelivered = "Delivered"
 	OrderCanceled = "Canceled"
+	OrderExpired = "Expired"
 )
 
 func (ou *orderUsecase) OrderFromCart(ctx context.Context, userId int, cart *model.Cart) (*model.Order, error) {
@@ -57,6 +60,11 @@ func (ou *orderUsecase) OrderFromCart(ctx context.Context, userId int, cart *mod
 	create, err := ou.orderRepo.CreateOrder(order)
 	if err != nil {
 		return nil, errors.New("failed to create order")
+	}
+
+	err = ou.ttlService.SetOrderTTL(ctx, create.ID, time.Minute * 60)
+	if err != nil {
+		return nil, errors.New("failed to set order ttl")
 	}
 
 	return create, nil
@@ -127,10 +135,17 @@ func (ou *orderUsecase) GetOrderById(orderId int) (*dto.OrderResponse, error) {
 		ShippingStatus: order.ShippingStatus,
 		ExpiredAt: order.ExpiredAt,
 	}
+
+	if time.Now().After(order.ExpiredAt) && order.PaymentStatus == PaymentUnpaid {
+		orderResponse.OrderStatus = OrderExpired
+	}
+
 	return orderResponse, nil
 }
 
 func (ou *orderUsecase) UpdatePaymentStatus(orderId int, req dto.UpdatePaymentStatusRequest) (*model.Order, error) {
+	var ctx context.Context
+
 	if req.PaymentStatus != PaymentPaid {
 		return nil, errors.New("invalid payment status")
 	}
@@ -144,6 +159,9 @@ func (ou *orderUsecase) UpdatePaymentStatus(orderId int, req dto.UpdatePaymentSt
 	if err != nil {
 		return nil, errors.New("failed to update payment status")
 	}
+
+	err = ou.ttlService.DeleteOrderTTL(ctx, orderId)
+
 	return updatePayment, nil
 }
 
